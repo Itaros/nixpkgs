@@ -154,6 +154,13 @@ stdenv.mkDerivation (rec {
     ln -s $out/bin/*-vscode $out/share/vscode/extensions/llvm-org.lldb-vscode-0.1.0/bin
   '';
 
+  # TODO: Hack to make dynamic linking work again. Find a better way to do this using the build-system machinery
+  postFixup = if (stdenv.isLinux && lib.versionAtLeast release_version "16") then ''
+    for f in $out/bin/.lldb-wrapped $out/bin/lldb-*; do
+      patchelf --add-rpath ${libclang.lib}/lib $f
+    done
+  '' else null;
+
   meta = llvm_meta // {
     homepage = "https://lldb.llvm.org/";
     description = "A next-generation high-performance debugger";
@@ -188,6 +195,7 @@ stdenv.mkDerivation (rec {
 
   postPatch = null;
   postInstall = null;
+  postFixup = null;
 
   outputs = [ "out" ];
 
